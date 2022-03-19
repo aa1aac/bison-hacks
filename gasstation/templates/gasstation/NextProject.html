@@ -1,0 +1,190 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Document</title>
+
+    <style>
+        #map{
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- {% comment %} API KEY =  AIzaSyADja9VSAdmvGSz_eH98YbmfkwJAPYq33M {% endcomment %} -->
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid" >
+                <a href="#" class="navbar-brand w-20">
+                    <img src="https://res.cloudinary.com/goabhi/image/upload/v1647697710/275465363_668038460984736_8953662360308100467_n_oe6mf9.png" height="45" width="55" alt="CoolBrand">
+                    <em> Spectrum </em>
+                  </a>
+    
+                
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" style="background-color: #7c9bcb;">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+    
+                <div class="collapse navbar-collapse"  id="navbarCollapse">
+                    <div class="navbar-nav justify-content-end">
+                      
+                        <a href="{% url 'home' %}" class="nav-item nav-link  m-2 d-block">Home</a>
+                        <a href="{% url 'games' %}" class="nav-item nav-link m-2 d-block">Game</a>
+                        <a href="" class="nav-item nav-link m-2 d-block">Discussion</a>
+                        <a href="{% url 'contact' %}" class="nav-item nav-link m-2 d-block" tabindex="-1">Contact Us</a>
+                        <a href="{% url 'search' %}" class="nav-item nav-link m-2 d-block active" tabindex="-1">Schools Nearby</a>
+                        <a href="{% url 'blog' %}" class="nav-item nav-link m-2 d-block" tabindex="-1">Blog</a>
+                    </div>
+                    
+                </div>
+    
+        </nav>
+        </div>
+    <div class = 'container mt-3'>
+
+        <div class="row">
+<div class="col-md"><h4 id = "text-center">Find autism centers nearby</h4>
+    <form id = 'location-form'> 
+        <input placeholder="enter your location" type = "text" id = 'location-input' class = "form-control form-control-lg">
+        <br>
+        <button type = "submit" class = "btn btn-primary btn-block">Submit</button>
+        <br>
+        <br>
+    </form>
+    <div id = "Address"></div></div>
+
+    <div class="col-md">
+        <div id = "map"></div>
+    </div>
+        </div>
+        
+
+
+
+        
+    <div>
+    
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALMKvmsMbF6vUinkii2H6aWzP09kWHZcE&libraries=&v=weekly"></script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALMKvmsMbF6vUinkii2H6aWzP09kWHZcE&libraries=places"></script>
+
+
+    <script>
+        var form = document.getElementById('location-form');
+
+        form.addEventListener('submit', geocode); 
+
+
+
+        var location2 = null;
+        var latitude = null;
+        var longitude = null;
+        var maps;
+
+
+
+        function lists(lat, lng){
+
+            var main_point = new google.maps.LatLng(lat, lng);
+            var options = {
+                zoom: 14,
+                center: main_point
+            };
+
+            maps = new google.maps.Map(document.getElementById('map'), options);
+
+            
+            var search_options = {
+                location: main_point,
+                radius: 2000,
+                keyword: 'autism'
+            };
+
+            var main_map = new google.maps.places.PlacesService(maps);
+            infowindow = new google.maps.InfoWindow();
+
+            main_map.nearbySearch(search_options, function(results){
+                console.log(results[0].name, results[0].vicinity)
+                data = `
+                    <h2> ${results[0].name} </h2>
+                    <p> ${results[0].vicinity} </p>
+                `
+
+                document.getElementById('Address').innerHTML = data
+                for (var i = 0; i < results.length; i++) {
+                    createMarker(results[i]);
+                }
+
+
+
+            });
+        }
+
+
+
+        function createMarker(place) {
+            var placeLoc = place.geometry.location;
+            var marker = new google.maps.Marker({
+            map: maps,
+            position: place.geometry.location
+            });
+
+            google.maps.event.addListener(marker, 'click', function() {
+            infowindow.setContent(place.name);
+            infowindow.open(map, this);
+        });
+}
+
+
+
+
+        function geocode(e){
+
+            e.preventDefault();
+            var location = document.getElementById('location-input').value;
+            
+            axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+                params: {
+                    address: location,
+                    key: "AIzaSyALMKvmsMbF6vUinkii2H6aWzP09kWHZcE"
+                }
+            })
+            .then(function(response){
+                // We will use these responses. 
+                
+                //Formatted address
+                location2 = response.data.results[0].formatted_address
+                latitude = response.data.results[0].geometry.location.lat
+                longitude = response.data.results[0].geometry.location.lng
+                // var locationoutput = `
+                //     <ul class = 'list-group'>
+                //         <li class = "list-group-item">${location2}</li>
+                //         <li class = "list-group-item">Latitude: ${latitude}</li>
+                //         <li class = "list-group-item">Longitude: ${longitude}</li>
+                //     </ul>
+                // `
+                // // Output
+                // document.getElementById('Address').innerHTML = locationoutput;
+
+                //Address Components
+                lists(latitude, longitude);
+
+            })
+            .catch(function(error){
+                console.log(error)
+            })
+        }
+
+
+    </script>
+
+
+</body>
+</html>
